@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Certificate & Vulnerability Remediation Dashboard</title>
+
+<!-- Bootstrap 5 -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ TOP BAR ============ -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark"><i class="bi bi-shield-lock-fill"></i></span>
+      <div class="brand-text">
+        <span class="brand-title">Certify<span class="brand-accent">Track</span></span>
+        <span class="brand-subtitle">SSL Certificate &amp; Vulnerability Remediation</span>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <div class="sync-status" id="syncStatus">
+        <i class="bi bi-arrow-repeat"></i>
+        <span>Synced via Power Automate &middot; <span id="syncTime">just now</span></span>
+      </div>
+      <button class="btn btn-refresh" id="refreshBtn" title="Refresh data">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+
+  <!-- ============ INTRO / SEARCH ============ -->
+  <section class="search-section">
+    <div class="search-copy">
+      <h1>Find your certificate or vulnerability record</h1>
+      <p>Search by application, owner, certificate ID, IP address, or POC name to see the latest remediation status.</p>
+    </div>
+
+    <div class="search-bar">
+      <i class="bi bi-search search-icon"></i>
+      <input type="text" id="searchInput" class="search-input" placeholder="Search application, owner, certificate ID, IP, hostname&hellip;">
+      <button class="search-clear d-none" id="searchClear" title="Clear search"><i class="bi bi-x-lg"></i></button>
+    </div>
+  </section>
+
+  <!-- ============ SUMMARY CARDS ============ -->
+  <section class="summary-grid" id="summaryGrid" aria-label="Summary statistics">
+    <!-- populated by JS -->
+  </section>
+
+  <!-- ============ FILTERS ============ -->
+  <section class="filter-bar">
+    <div class="filter-group">
+      <label for="filterBU">Business Unit</label>
+      <select id="filterBU" class="form-select">
+        <option value="">All</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="filterCurrentStatus">Current Status</label>
+      <select id="filterCurrentStatus" class="form-select">
+        <option value="">All</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="filterCategory">Status Category</label>
+      <select id="filterCategory" class="form-select">
+        <option value="">All</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="filterOwner">Portfolio Owner</label>
+      <select id="filterOwner" class="form-select">
+        <option value="">All</option>
+      </select>
+    </div>
+    <div class="filter-group filter-reset">
+      <label>&nbsp;</label>
+      <button class="btn btn-outline-reset" id="resetFilters"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
+    </div>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <section class="results-section">
+    <div class="results-header">
+      <h2>Records</h2>
+      <span class="results-count" id="resultsCount">0 records</span>
+    </div>
+
+    <div class="table-card">
+      <div class="table-scroll">
+        <table class="records-table" id="recordsTable">
+          <thead>
+            <tr>
+              <th data-sort="application">Application</th>
+              <th data-sort="portfolioOwner">Portfolio Owner</th>
+              <th data-sort="certExpiry">Certificate Expiry</th>
+              <th data-sort="previousStatus">Previous Status</th>
+              <th data-sort="currentStatus">Current Status</th>
+              <th data-sort="targetETA">Target ETA</th>
+              <th class="th-action">Details</th>
+            </tr>
+          </thead>
+          <tbody id="recordsBody">
+            <!-- populated by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="empty-state d-none" id="emptyState">
+        <i class="bi bi-inbox"></i>
+        <p>No records match your search or filters.</p>
+        <button class="btn btn-outline-reset" id="emptyResetBtn">Clear filters</button>
+      </div>
+    </div>
+
+    <div class="pagination-bar" id="paginationBar">
+      <span id="pageInfo">Page 1 of 1</span>
+      <div class="pagination-controls">
+        <button class="btn btn-page" id="prevPage"><i class="bi bi-chevron-left"></i></button>
+        <button class="btn btn-page" id="nextPage"><i class="bi bi-chevron-right"></i></button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="page-footer">
+    <p>Data refreshed automatically from the master SSL Certificate tracker. For discrepancies, contact your Portfolio Owner or Responsible CIO listed on the record.</p>
+  </footer>
+</main>
+
+<!-- ============ DETAIL MODAL ============ -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <span class="modal-eyebrow" id="modalCertId">CERT ID</span>
+          <h5 class="modal-title" id="modalAppTitle">Application name</h5>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- populated by JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap Bundle JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
